@@ -7,6 +7,17 @@ pipeline {
     }
 
     stages {
+
+    stage('Initialize Docker') {
+                steps {
+                    script {
+                        // 'docker-latest' must match the name configured in Global Tool Configuration
+                        def dockerHome = tool name: 'docker-latest', type: 'dockerTool'
+                        env.PATH = "${dockerHome}/bin:${env.PATH}"
+                    }
+                }
+            }
+
         stage('Checkout') {
             steps {
                 dir('/var/jenkins_home/workspace/local-repo') {
