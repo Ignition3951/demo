@@ -1,20 +1,26 @@
+# k8s/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: spring-demo
+  name: spring-boot-demo
+  labels:
+    app: spring-boot-demo
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: spring-demo
+      app: spring-boot-demo
   template:
     metadata:
       labels:
-        app: spring-demo
+        app: spring-boot-demo
     spec:
       containers:
-        - name: spring-demo
-          image: spring-demo:latest
+        - name: spring-boot-demo
+          image: spring-boot-demo:latest    # Or localhost:5000/spring-boot-demo:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
-          imagePullPolicy: IfNotPresent
+          env:
+            - name: JAVA_OPTS
+              value: "-Xms128m -Xmx512m"
