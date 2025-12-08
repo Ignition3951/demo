@@ -10,6 +10,7 @@ tools {
     IMAGE_TAG = 'latest'
     REGISTRY = '' // leave empty for Minikube docker-env; else 'localhost:5000'
     KUBECONFIG = "${WORKSPACE}/.kube/config"
+    KUBECTL_VERSION = 'v1.27.3'
   }
 
   stages {
@@ -18,6 +19,17 @@ tools {
         checkout scm
       }
     }
+
+    stage('Install kubectl') {
+          steps {
+            sh '''
+              curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+              chmod +x kubectl
+              mv kubectl /usr/local/bin/
+              kubectl version --client
+            '''
+          }
+        }
 
     stage('Set kubeconfig') {
       steps {
