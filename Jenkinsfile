@@ -1,5 +1,5 @@
 pipeline {
-  agent { label 'docker' }  // Or `any`; ensure Docker is available
+  agent any  // Or `any`; ensure Docker is available
 
   environment {
     APP_NAME = 'spring-boot-demo'
