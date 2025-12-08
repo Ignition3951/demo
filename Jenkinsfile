@@ -53,7 +53,7 @@ tools {
     stage('Docker Build') {
       steps {
         script {
-          def imageName = REGISTRY ? "${REGISTRY}/${APP_NAME}:${IMAGE_TAG}" : "${APP_NAME}:${IMAGE_TAG}"
+          def imageName = env.REGISTRY ? "${REGISTRY}/${APP_NAME}:${IMAGE_TAG}" : "${APP_NAME}:${IMAGE_TAG}"
           sh "docker build -t ${imageName} ."
         }
       }
