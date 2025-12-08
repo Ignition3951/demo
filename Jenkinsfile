@@ -23,11 +23,14 @@ tools {
     stage('Install kubectl') {
           steps {
             sh '''
-              curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
-              chmod +x kubectl
-              mv kubectl /usr/local/bin/
-              kubectl version --client
-            '''
+                  curl -LO https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl
+                  chmod +x kubectl
+                  mkdir -p $HOME/bin
+                  mv kubectl $HOME/bin/
+                  echo 'export PATH=$HOME/bin:$PATH' >> $HOME/.bashrc
+                  export PATH=$HOME/bin:$PATH
+                  kubectl version --client
+                '''
           }
         }
 
