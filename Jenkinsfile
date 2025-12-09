@@ -34,20 +34,6 @@ tools {
           }
         }
 
-        stage('Install docker cli') {
-        steps {
-        sh '''
-        mkdir -p $HOME/bin
-        curl -LO https://download.docker.com/linux/static/stable/x86_64/docker-24.0.5.tgz
-        tar xzvf docker-24.0.5.tgz
-        mv docker/docker $HOME/bin/
-        chmod +x $HOME/bin/docker
-        docker_version=$($HOME/bin/docker --version)
-        echo "Installed Docker CLI version: $docker_version"
-        '''
-        }
-        }
-
     stage('Set kubeconfig') {
       steps {
         sh '''
