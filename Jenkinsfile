@@ -54,7 +54,7 @@ tools {
       steps {
         script {
           def imageName = env.REGISTRY ? "${REGISTRY}/${APP_NAME}:${IMAGE_TAG}" : "${APP_NAME}:${IMAGE_TAG}"
-          sh "$HOME/bin/docker build -t ${imageName} ."
+          sh "docker build -t ${imageName} ."
         }
       }
     }
