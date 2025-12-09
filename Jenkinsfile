@@ -69,7 +69,7 @@ tools {
     stage('Deploy to Minikube') {
       steps {
         script {
-          def imageName = REGISTRY ? "${REGISTRY}/${APP_NAME}:${IMAGE_TAG}" : "${APP_NAME}:${IMAGE_TAG}"
+          def imageName = env.REGISTRY ? "${REGISTRY}/${APP_NAME}:${IMAGE_TAG}" : "${APP_NAME}:${IMAGE_TAG}"
           // Update image in deployment if using registry
           sh """
             kubectl --kubeconfig=${KUBECONFIG} apply -f deployment.yaml
