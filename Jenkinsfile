@@ -2,7 +2,7 @@ pipeline {
   agent any  // Or `any`; ensure Docker is available
 
 tools {
-    maven 'Maven 3.9.9'   // name must match Jenkins tool config
+    maven 'Maven3.9'   // name must match Jenkins tool config
   }
 
   environment {
