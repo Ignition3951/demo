@@ -45,13 +45,6 @@ tools {
       }
     }
 
-    stage('Docker Push') {
-      when { expression { return env.REGISTRY?.trim() } }
-      steps {
-        sh "docker push ${REGISTRY}/${APP_NAME}:${IMAGE_TAG}"
-      }
-    }
-
     stage('Deploy to Minikube') {
       steps {
         script {
