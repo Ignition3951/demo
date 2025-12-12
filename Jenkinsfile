@@ -6,7 +6,7 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
-        git branch: 'main', url: 'https://github.com/Ignition3951/demo.git'
+        git branch: 'master', url: 'https://github.com/Ignition3951/demo.git'
       }
     }
     stage('Build and Test') {
