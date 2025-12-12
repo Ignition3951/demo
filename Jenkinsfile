@@ -1,79 +1,63 @@
 pipeline {
-  agent any  // Or `any`; ensure Docker is available
-
-tools {
-    maven 'Maven3.9'   // name must match Jenkins tool config
+  agent any
+  parameters {
+    string(name: 'build_version', defaultValue: 'V1.0', description: 'Build version to use for Docker image')
   }
-
-  environment {
-    APP_NAME = 'spring-boot-demo'
-    IMAGE_TAG = 'latest'
-    REGISTRY = '' // leave empty for Minikube docker-env; else 'localhost:5000'
-    KUBECONFIG = "${WORKSPACE}/.kube/config"
-    KUBECTL_VERSION = 'v1.27.3'
-  }
-
   stages {
     stage('Checkout') {
       steps {
-        checkout scm
+        git branch: 'main', url: 'https://github.com/Ignition3951/demo.git'
       }
     }
-
-    stage('Set kubeconfig') {
+    stage('Build and Test') {
       steps {
-        sh '''
-          mkdir -p ${WORKSPACE}/.kube
-          # Copy kubeconfig from Jenkins home (mounted from host)
-          cp ~/.kube/config ${WORKSPACE}/.kube/config
-        '''
+        sh 'ls -ltr'
+        // build the project and create a JAR file
+        sh 'mvn clean package'
       }
     }
-
-    stage('Build') {
-      steps {
-        sh 'mvn -B -q -DskipTests clean package'
+    stage('Static Code Analysis') {
+      environment {
+        SONAR_URL = "http://localhost:9000"
       }
-    }
-
-    stage('Docker Build') {
       steps {
-        script {
-          def imageName = env.REGISTRY ? "${REGISTRY}/${APP_NAME}:${IMAGE_TAG}" : "${APP_NAME}:${IMAGE_TAG}"
-          sh "docker build -t ${imageName} ."
+        withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
+          sh 'mvn sonar:sonar -Dsonar.login=$SONAR_AUTH_TOKEN -Dsonar.host.url=${SONAR_URL}'
         }
       }
     }
-
-    stage('Deploy to Minikube') {
-      steps {
-        script {
-          def imageName = env.REGISTRY ? "${REGISTRY}/${APP_NAME}:${IMAGE_TAG}" : "${APP_NAME}:${IMAGE_TAG}"
-          // Update image in deployment if using registry
-          sh """
-            kubectl --kubeconfig=${KUBECONFIG} apply -f deployment.yaml
-            kubectl --kubeconfig=${KUBECONFIG} apply -f service.yaml
-            kubectl --kubeconfig=${KUBECONFIG} set image deployment/${APP_NAME} ${APP_NAME}=${imageName} --record || true
-          """
+    stage('Build and Push Docker Image') {
+          environment {
+            DOCKER_IMAGE = "utk1311/demo-java-app:${build_version}"
+            REGISTRY_CREDENTIALS = credentials('docker')
+          }
+          steps {
+            script {
+                sh 'docker build -t ${DOCKER_IMAGE} .'
+                def dockerImage = docker.image("${DOCKER_IMAGE}")
+                docker.withRegistry('https://index.docker.io/v1/', "docker") {
+                    dockerImage.push()
+                }
+            }
+          }
         }
-      }
-    }
-
-    stage('Verify rollout') {
-      steps {
-        sh "kubectl --kubeconfig=${KUBECONFIG} rollout status deployment/${APP_NAME} --timeout=60s"
-      }
-    }
-  }
-
-  post {
-    success {
-      echo 'Deployment succeeded.'
-    }
-    failure {
-      echo 'Deployment failed.'
-      sh "kubectl --kubeconfig=${KUBECONFIG} describe deployment/${APP_NAME} || true"
-      sh "kubectl --kubeconfig=${KUBECONFIG} logs deployment/${APP_NAME} || true"
+    stage('Update Deployment File') {
+        environment {
+            GIT_REPO_NAME = "demo"
+            GIT_USER_NAME = "Ignition3951"
+        }
+        steps {
+            withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                sh '''
+                    git config user.email "ignition3951@gmail.com"
+                    git config user.name "Utkarsh Srivastava"
+                    sed -i "s/tag: .*/tag: \"${build_version}\"/" helm/app/values.yaml
+                    git add helm/app/values.yaml
+                    git commit -m "Update deployment image to version ${build_version}"
+                    git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                '''
+            }
+        }
     }
   }
 }
